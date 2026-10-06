@@ -1,4 +1,7 @@
 import os
+from typing import Optional
+
+import requests
 import streamlit as st
 from PIL import Image
 
@@ -225,109 +228,68 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# Project Data Store
+# Project Data Store (desde GitHub)
 # ---------------------------------------------------------
-PROJECTS = [
-    {
-        "id": "tts",
-        "title": "Conversión de Texto a Voz",
-        "category": "Audio & Voz",
-        "category_icon": "🎙️",
-        "image": "txt_to_audio2.png",
-        "desc": "Síntesis vocal hiperrealista a partir de texto (TTS) con modulación de entonación y arquitectura multimodal.",
-        "tags": ["TTS", "Audio AI", "Streamlit", "Multimodal"],
-        "url": "https://imultimod.streamlit.app/",
-        "featured": True
-    },
-    {
-        "id": "yolo",
-        "title": "Reconocimiento y Detección de Objetos",
-        "category": "Visión por Computador",
-        "category_icon": "👁️",
-        "image": "txt_to_audio.png",
-        "desc": "Detección, conteo y clasificación de objetos en imágenes en tiempo real mediante la arquitectura YOLOv5.",
-        "tags": ["YOLOv5", "Computer Vision", "PyTorch", "Realtime"],
-        "url": "https://yolov5cmc.streamlit.app/",
-        "featured": True
-    },
-    {
-        "id": "training",
-        "title": "Entrenamiento de Modelos Personalizados",
-        "category": "Modelos & ML",
-        "category_icon": "⚙️",
-        "image": "OIG5.jpg",
-        "desc": "Laboratorio para entrenar, transferir aprendizaje y probar modelos customizados de deep learning.",
-        "tags": ["Model Training", "Deep Learning", "Inferencia", "Transfer Learning"],
-        "url": "https://xn3pg24ztuv6fdiqon8qn3.streamlit.app/",
-        "featured": False
-    },
-    {
-        "id": "stt",
-        "title": "Conversión de Voz a Texto",
-        "category": "Audio & Voz",
-        "category_icon": "🎙️",
-        "image": "OIG8.jpg",
-        "desc": "Reconocimiento automático del habla (STT) y traducción inteligente en vivo con alta precisión.",
-        "tags": ["Speech-to-Text", "Audio AI", "Traducción", "NLP"],
-        "url": "https://traductorw.streamlit.app/",
-        "featured": False
-    },
-    {
-        "id": "data_agents",
-        "title": "Análisis de Datos con Agentes IA",
-        "category": "Agentes & Datos",
-        "category_icon": "📊",
-        "image": "data_analisis.png",
-        "desc": "Automatización del análisis exploratorio, insights estadísticos y visualizaciones mediante agentes inteligentes.",
-        "tags": ["AI Agents", "Pandas", "Analytics", "Data Science"],
-        "url": "https://dataagente.streamlit.app/",
-        "featured": True
-    },
-    {
-        "id": "whisper",
-        "title": "Transcriptor Inteligente Audio / Video",
-        "category": "Audio & Voz",
-        "category_icon": "🎙️",
-        "image": "OIG3.jpg",
-        "desc": "Transcripción multimedia profunda con soporte multilenguaje y marcas de tiempo utilizando OpenAI Whisper.",
-        "tags": ["Whisper", "Multimedia", "Transcripción", "OpenAI"],
-        "url": "https://transcript-whisper.streamlit.app/",
-        "featured": False
-    },
-    {
-        "id": "rag_pdf",
-        "title": "Generación en Contexto (RAG con PDF)",
-        "category": "LLMs & RAG",
-        "category_icon": "📄",
-        "image": "Chat_pdf.png",
-        "desc": "Asistente conversacional con recuperación aumentada (RAG) para consultar y extraer información de documentos PDF.",
-        "tags": ["RAG", "LangChain", "Vector DB", "PDF Chat"],
-        "url": "https://chatpdf-cc.streamlit.app/",
-        "featured": True
-    },
-    {
-        "id": "vision_gpt4o",
-        "title": "Análisis Multimodal de Imágenes",
-        "category": "Visión por Computador",
-        "category_icon": "👁️",
-        "image": "OIG4.jpg",
-        "desc": "Interpretación visual avanzada, resolución de problemas y razonamiento multimodal potenciado por GPT-4o.",
-        "tags": ["GPT-4o", "Multimodal", "Vision AI", "Image QA"],
-        "url": "https://vision2-gpt4o.streamlit.app/",
-        "featured": False
-    },
-    {
-        "id": "cyberphysical",
-        "title": "Sistemas Ciberfísicos & Percepción",
-        "category": "Sistemas Ciberfísicos",
-        "category_icon": "🤖",
-        "image": "OIG6.jpg",
-        "desc": "Interacción entre algoritmos de visión por computador y el mundo físico para sensórica y automatización.",
-        "tags": ["Ciberfísica", "IoT", "Sensórica", "Automatización"],
-        "url": "https://vision2-gpt4o.streamlit.app/",
-        "featured": False
+GITHUB_ORG = "PascualActivities"
+
+
+@st.cache_data(ttl=3600, show_spinner="Cargando repositorios desde GitHub...")
+def fetch_org_repos(org: str, token: Optional[str] = None):
+    """Obtiene todos los repos públicos de una organización (con paginación)."""
+    headers = {"Accept": "application/vnd.github+json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
+    repos, page = [], 1
+    while True:
+        r = requests.get(
+            f"https://api.github.com/orgs/{org}/repos",
+            headers=headers,
+            params={"per_page": 100, "page": page, "type": "public", "sort": "pushed"},
+            timeout=15,
+        )
+        r.raise_for_status()
+        batch = r.json()
+        if not batch:
+            break
+        repos.extend(batch)
+        if len(batch) < 100:
+            break
+        page += 1
+    return repos
+
+
+def repo_to_project(repo: dict) -> dict:
+    """Convierte un repo de GitHub al formato de tarjeta."""
+    lang = repo.get("language") or "Otros"
+    tags = ([repo["language"]] if repo.get("language") else []) + repo.get("topics", [])
+    return {
+        "id": repo["name"],
+        "title": repo["name"].replace("-", " ").replace("_", " ").title(),
+        "category": lang,
+        "category_icon": "📦",
+        # Imagen de vista previa que GitHub genera automáticamente para cada repo
+        "image": f"https://opengraph.githubassets.com/1/{GITHUB_ORG}/{repo['name']}",
+        "desc": repo.get("description") or "Repositorio sin descripción.",
+        "tags": tags[:5] or ["GitHub"],
+        "url": repo["html_url"],
+        "homepage": repo.get("homepage") or "",
+        "featured": False,
     }
-]
+
+
+try:
+    token = st.secrets.get("GITHUB_TOKEN", None)  # opcional
+    raw_repos = fetch_org_repos(GITHUB_ORG, token)
+    # Excluye forks y archivados (quita esta línea si quieres incluirlos)
+    raw_repos = [r for r in raw_repos if not r.get("fork") and not r.get("archived")]
+    PROJECTS = [repo_to_project(r) for r in raw_repos]
+except Exception as e:
+    PROJECTS = []
+    st.error(f"No se pudieron cargar los repositorios: {e}")
+
+# Categorías dinámicas (según el lenguaje principal de cada repo)
+lang_list = sorted({p["category"] for p in PROJECTS})
 
 # ---------------------------------------------------------
 # Sidebar
@@ -337,7 +299,7 @@ with st.sidebar:
     if os.path.exists("audio_to_txt.png"):
         avatar_img = Image.open("audio_to_txt.png")
         st.image(avatar_img, use_container_width=True)
-    
+
     st.markdown("""
         <div style="text-align: center; margin-top: -10px; margin-bottom: 15px;">
             <h2 style="margin: 0; font-size: 1.35rem; font-weight: 800;">Carlos M. Correa</h2>
@@ -351,7 +313,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     st.markdown("---")
-    
+
     st.subheader("📚 Recursos & Prácticas")
     st.markdown(
         "Accede al portal oficial con guías didácticas, ejercicios prácticos y material formativo paso a paso:"
@@ -382,19 +344,17 @@ with st.sidebar:
 # ---------------------------------------------------------
 # Main Header / Hero Section
 # ---------------------------------------------------------
-st.markdown("""
+st.markdown(f"""
 <div class="hero-container">
     <div class="hero-badge">⚡ Portafolio de Innovación Tecnológica</div>
     <div class="hero-title">Aplicaciones de Inteligencia Artificial</div>
     <div class="hero-desc">
-        Explora una suite interactiva de proyectos y soluciones desplegadas en producción. 
-        Herramientas prácticas que integran Deep Learning, Visión Computacional, Modelos de Voz, Agentes y Arquitecturas RAG.
+        Repositorios de la organización <b>{GITHUB_ORG}</b>, sincronizados automáticamente desde GitHub.
     </div>
     <div style="margin-top: 10px;">
-        <span class="metric-pill">🚀 <b>9</b> Aplicaciones en vivo</span>
-        <span class="metric-pill">🧩 <b>5</b> Áreas de especialización</span>
-        <span class="metric-pill">☁️ Despliegues 100% Cloud</span>
-        <span class="metric-pill">⚡ Modelos SOTA (YOLO, Whisper, GPT-4o)</span>
+        <span class="metric-pill">🚀 <b>{len(PROJECTS)}</b> Repositorios</span>
+        <span class="metric-pill">🧩 <b>{len(lang_list)}</b> Lenguajes / áreas</span>
+        <span class="metric-pill">☁️ Datos en vivo desde GitHub</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -402,22 +362,15 @@ st.markdown("""
 # ---------------------------------------------------------
 # Filter & Search Controls
 # ---------------------------------------------------------
-categories = [
-    "🌟 Todas las Aplicaciones",
-    "👁️ Visión por Computador",
-    "🎙️ Audio & Voz",
-    "📄 LLMs & RAG",
-    "📊 Agentes & Datos",
-    "🤖 Sistemas Ciberfísicos",
-    "⚙️ Modelos & ML"
-]
+ALL_LABEL = "🌟 Todas las Aplicaciones"
+categories = [ALL_LABEL] + [f"📦 {c}" for c in lang_list]
 
 col_search, col_filter = st.columns([1.2, 1.8])
 
 with col_search:
     search_query = st.text_input(
         "🔍 Buscar por tecnología o nombre:",
-        placeholder="Ej: YOLO, Whisper, RAG, GPT-4o, Audio...",
+        placeholder="Ej: Python, streamlit, nombre del repo...",
         label_visibility="collapsed"
     )
 
@@ -433,29 +386,29 @@ filtered_projects = []
 for p in PROJECTS:
     # Category match
     cat_match = True
-    if selected_cat != "🌟 Todas las Aplicaciones":
+    if selected_cat != ALL_LABEL:
         # Extract clean category name
         cat_clean = selected_cat.split(" ", 1)[1]
         cat_match = (p["category"] == cat_clean)
-    
+
     # Search query match
     search_match = True
     if search_query.strip():
         q = search_query.lower()
         search_match = (
-            q in p["title"].lower() or 
-            q in p["desc"].lower() or 
+            q in p["title"].lower() or
+            q in p["desc"].lower() or
             q in p["category"].lower() or
             any(q in t.lower() for t in p["tags"])
         )
-    
+
     if cat_match and search_match:
         filtered_projects.append(p)
 
 # Result status counter
 st.markdown(
     f"<p style='color: #64748b; font-size: 0.9rem; margin-top: 5px; margin-bottom: 18px;'>"
-    f"Mostrando <b>{len(filtered_projects)}</b> de <b>{len(PROJECTS)}</b> aplicaciones disponibles"
+    f"Mostrando <b>{len(filtered_projects)}</b> de <b>{len(PROJECTS)}</b> repositorios disponibles"
     f"</p>",
     unsafe_allow_html=True
 )
@@ -476,28 +429,27 @@ else:
                     f"<div class='badge-category'>{proj['category_icon']} {proj['category']}</div>",
                     unsafe_allow_html=True
                 )
-                
+
                 # Image
-                if os.path.exists(proj["image"]):
-                    img = Image.open(proj["image"])
-                    st.image(img, use_container_width=True)
+                if proj["image"].startswith("http"):
+                    st.image(proj["image"], use_container_width=True)
+                elif os.path.exists(proj["image"]):
+                    st.image(Image.open(proj["image"]), use_container_width=True)
                 else:
                     st.write("📷 *Imagen no disponible*")
-                
+
                 # Title & Description
                 st.markdown(f"<div class='card-title'>{proj['title']}</div>", unsafe_allow_html=True)
                 st.markdown(f"<div class='card-desc'>{proj['desc']}</div>", unsafe_allow_html=True)
-                
+
                 # Tech tags
                 tags_html = "".join([f"<span class='tech-pill'>{t}</span>" for t in proj["tags"]])
                 st.markdown(f"<div style='margin-bottom: 14px;'>{tags_html}</div>", unsafe_allow_html=True)
-                
-                # CTA Button
-                st.link_button(
-                    "🚀 Probar Aplicación",
-                    proj["url"],
-                    use_container_width=True
-                )
+
+                # CTA Buttons
+                st.link_button("📂 Ver repositorio", proj["url"], use_container_width=True)
+                if proj["homepage"]:
+                    st.link_button("🚀 Probar aplicación", proj["homepage"], use_container_width=True)
 
 # ---------------------------------------------------------
 # Footer
