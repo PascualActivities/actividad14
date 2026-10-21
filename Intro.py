@@ -259,6 +259,15 @@ def fetch_org_repos(org: str, token: Optional[str] = None):
     return repos
 
 
+@st.cache_resource
+def load_avatar(path: str) -> Image.Image:
+    """Abre la imagen una sola vez y la reutiliza entre reruns."""
+    return Image.open(path)
+
+
+PAGE_SIZE = 12  # tarjetas por bloque; cada tarjeta carga una imagen externa
+
+
 def repo_to_project(repo: dict) -> dict:
     """Convierte un repo de GitHub al formato de tarjeta."""
     lang = repo.get("language") or "Otros"
@@ -295,10 +304,9 @@ lang_list = sorted({p["category"] for p in PROJECTS})
 # Sidebar
 # ---------------------------------------------------------
 with st.sidebar:
-    # Profile avatar
+    # Profile avatar (cacheado: no se vuelve a abrir el archivo en cada rerun)
     if os.path.exists("audio_to_txt.png"):
-        avatar_img = Image.open("audio_to_txt.png")
-        st.image(avatar_img, use_container_width=True)
+        st.image(load_avatar("audio_to_txt.png"), use_container_width=True)
 
     st.markdown("""
         <div style="text-align: center; margin-top: -10px; margin-bottom: 15px;">
@@ -416,11 +424,24 @@ st.markdown(
 # ---------------------------------------------------------
 # Projects Grid
 # ---------------------------------------------------------
+# Paginación: al cambiar búsqueda o categoría se vuelve al primer bloque
+filter_sig = (search_query, selected_cat)
+if st.session_state.get("_filter_sig") != filter_sig:
+    st.session_state["_filter_sig"] = filter_sig
+    st.session_state["_visible_count"] = PAGE_SIZE
+visible_count = st.session_state.get("_visible_count", PAGE_SIZE)
+visible_projects = filtered_projects[:visible_count]
+
+
+def show_more():
+    st.session_state["_visible_count"] += PAGE_SIZE
+
+
 if not filtered_projects:
     st.info("No se encontraron aplicaciones con los criterios seleccionados. Intenta con otra búsqueda o categoría.")
 else:
     cols = st.columns(3)
-    for i, proj in enumerate(filtered_projects):
+    for i, proj in enumerate(visible_projects):
         col = cols[i % 3]
         with col:
             with st.container(border=True):
@@ -450,6 +471,14 @@ else:
                 st.link_button("📂 Ver repositorio", proj["url"], use_container_width=True)
                 if proj["homepage"]:
                     st.link_button("🚀 Probar aplicación", proj["homepage"], use_container_width=True)
+
+    remaining = len(filtered_projects) - len(visible_projects)
+    if remaining > 0:
+        st.button(
+            f"Mostrar {min(PAGE_SIZE, remaining)} más ({remaining} restantes)",
+            on_click=show_more,
+            use_container_width=True,
+        )
 
 # ---------------------------------------------------------
 # Footer
