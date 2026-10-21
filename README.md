@@ -1,6 +1,6 @@
-# 🤖 Portafolio de Soluciones en Inteligencia Artificial
+# 🚀 Portafolio de Apps en Streamlit — Duvan Villadiego
 
-Bienvenido al repositorio central de **cmcorrea_apps**. Este proyecto es una aplicación web interactiva desarrollada en **Streamlit** que reúne y presenta un catálogo de aplicaciones y demostraciones de **Inteligencia Artificial**, abarcando áreas como Visión Artificial, Procesamiento de Audio, Agentes Inteligentes, Sistemas Ciberfísicos y Modelos de Lenguaje (LLMs).
+Repositorio del portafolio de aplicaciones desarrolladas en **Streamlit**. Cada tarjeta enlaza a la app publicada, muestra una captura de ella y al repositorio en GitHub. Los datos se cargan desde la API de GitHub de la organización **PascualActivities**.
 
 ---
 
@@ -24,8 +24,8 @@ Para ejecutar este portafolio localmente en tu computadora:
 
 1. **Clonar o descargar el repositorio**:
    ```bash
-   git clone https://github.com/cmcorrea/cmcorrea_apps.git
-   cd cmcorrea_apps
+   git clone https://github.com/PascualActivities/actividad14.git
+   cd actividad14
    ```
 
 2. **Instalar las dependencias**:
@@ -42,5 +42,5 @@ Para ejecutar este portafolio localmente en tu computadora:
 
 ## 🌐 Recursos Adicionales
 
-- **Portal de Prácticas y Ejercicios de IA**: [Visitar Sitio Web](https://sites.google.com/view/aplicacionesdeia/inicio)
-- **Autor**: Carlos M. Correa
+- **Portafolio web**: [duvanvilladiego.dev](https://www.duvanvilladiego.dev/)
+- **Autor**: Duvan Villadiego

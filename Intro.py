@@ -1,15 +1,27 @@
 import os
 from typing import Optional
+from urllib.parse import quote
 
 import requests
 import streamlit as st
 from PIL import Image
 
+# Perfil del autor (se muestra en la barra lateral, el hero y el pie de página)
+PROFILE = {
+    "name": "Duvan Villadiego",
+    "role": "Desarrollador & Arquitecto de software",
+    "bio": "Desarrollo de soluciones de software simplificadas",
+    "web": "https://www.duvanvilladiego.dev/",
+    "linkedin": "https://www.linkedin.com/in/duvan-villadiego/",
+    "github": "https://github.com/DuvanVilladiego",
+    "blog": "https://duvanvilladiego.dev/blog",
+}
+
 # ---------------------------------------------------------
 # Page Configuration
 # ---------------------------------------------------------
 st.set_page_config(
-    page_title="AI Portfolio | Aplicaciones de Inteligencia Artificial",
+    page_title="Duvan Villadiego | Portafolio de Apps en Streamlit",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -268,21 +280,32 @@ def load_avatar(path: str) -> Image.Image:
 PAGE_SIZE = 12  # tarjetas por bloque; cada tarjeta carga una imagen externa
 
 
+def streamlit_preview(app_url: str) -> str:
+    """Captura de la app de Streamlit (servicio gratuito de screenshots, sin API key)."""
+    return (
+        "https://api.microlink.io/?"
+        f"url={quote(app_url, safe='')}&screenshot=true&meta=false"
+        "&embed=screenshot.url&viewport.width=1280&viewport.height=720"
+    )
+
+
 def repo_to_project(repo: dict) -> dict:
     """Convierte un repo de GitHub al formato de tarjeta."""
     lang = repo.get("language") or "Otros"
     tags = ([repo["language"]] if repo.get("language") else []) + repo.get("topics", [])
+    homepage = repo.get("homepage") or ""
     return {
         "id": repo["name"],
         "title": repo["name"].replace("-", " ").replace("_", " ").title(),
         "category": lang,
         "category_icon": "📦",
-        # Imagen de vista previa que GitHub genera automáticamente para cada repo
-        "image": f"https://opengraph.githubassets.com/1/{GITHUB_ORG}/{repo['name']}",
-        "desc": repo.get("description") or "Repositorio sin descripción.",
-        "tags": tags[:5] or ["GitHub"],
+        # Preview = captura de la app de Streamlit; si el repo no tiene app, imagen de GitHub
+        "image": streamlit_preview(homepage) if homepage else
+                 f"https://opengraph.githubassets.com/1/{GITHUB_ORG}/{repo['name']}",
+        "desc": repo.get("description") or "Aplicación de Streamlit.",
+        "tags": tags[:5] or ["Streamlit"],
         "url": repo["html_url"],
-        "homepage": repo.get("homepage") or "",
+        "homepage": homepage,
         "featured": False,
     }
 
@@ -291,7 +314,10 @@ try:
     token = st.secrets.get("GITHUB_TOKEN", None)  # opcional
     raw_repos = fetch_org_repos(GITHUB_ORG, token)
     # Excluye forks y archivados (quita esta línea si quieres incluirlos)
-    raw_repos = [r for r in raw_repos if not r.get("fork") and not r.get("archived")]
+    raw_repos = [
+        r for r in raw_repos
+        if not r.get("fork") and not r.get("archived") and r["name"] != "actividad14"  # excluye este portafolio
+    ]
     PROJECTS = [repo_to_project(r) for r in raw_repos]
 except Exception as e:
     PROJECTS = []
@@ -308,26 +334,22 @@ with st.sidebar:
     if os.path.exists("audio_to_txt.png"):
         st.image(load_avatar("audio_to_txt.png"), use_container_width=True)
 
-    st.markdown("""
+    st.markdown(f"""
         <div style="text-align: center; margin-top: -10px; margin-bottom: 15px;">
-            <h2 style="margin: 0; font-size: 1.35rem; font-weight: 800;">Duvan Villadiego</h2>
+            <h2 style="margin: 0; font-size: 1.35rem; font-weight: 800;">{PROFILE["name"]}</h2>
             <p style="color: #6366f1; font-weight: 600; font-size: 0.85rem; margin-top: 4px; margin-bottom: 10px;">
-                Desarrollador & Arquitecto de software
+                {PROFILE["role"]}
             </p>
             <p style="font-size: 0.82rem; color: #64748b; line-height: 1.45; text-align: justify;">
-                Desarrollo de soluciones de software simplificadas
+                {PROFILE["bio"]}
             </p>
         </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("---")
-
-    st.subheader("📚 Recursos & Prácticas")
-    st.markdown(
-        "Accede al portal oficial con guías didácticas, ejercicios prácticos y material formativo paso a paso:"
-    )
-    url_ia = "https://www.duvanvilladiego.dev/"
-    st.link_button("🌐 Abrir Portafolio", url_ia, use_container_width=True)
+    st.link_button("🌐 Portafolio web", PROFILE["web"], use_container_width=True)
+    st.link_button("💼 LinkedIn", PROFILE["linkedin"], use_container_width=True)
+    st.link_button("🐙 GitHub", PROFILE["github"], use_container_width=True)
+    st.link_button("✍️ Blog", PROFILE["blog"], use_container_width=True)
 
     st.markdown("---")
     st.subheader("🛠️ Stack Tecnológico")
@@ -337,13 +359,15 @@ with st.sidebar:
         <span class="tech-pill">Springboot</span>
         <span class="tech-pill">.NET</span>
         <span class="tech-pill">Python</span>
+        <span class="tech-pill">Streamlit</span>
+        <span class="tech-pill">Pandas</span>
         <span class="tech-pill">Kafka</span>
         <span class="tech-pill">Patterns designs</span>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown("---")
-    st.caption("© 2026 Duvan Villadiego")
+    st.caption(f"© 2026 {PROFILE['name']} • Portafolio de apps en Streamlit")
 
 # ---------------------------------------------------------
 # Main Header / Hero Section
@@ -351,14 +375,14 @@ with st.sidebar:
 st.markdown(f"""
 <div class="hero-container">
     <div class="hero-badge">⚡ Portafolio de Innovación Tecnológica</div>
-    <div class="hero-title">Aplicaciones de Inteligencia Artificial</div>
+    <div class="hero-title">Apps de Streamlit por {PROFILE["name"]}</div>
     <div class="hero-desc">
-        Repositorios de la organización <b>{GITHUB_ORG}</b>, sincronizados automáticamente desde GitHub.
+        Proyectos de datos y aplicaciones interactivas. Cada tarjeta muestra una captura de la app publicada en Streamlit.
     </div>
     <div style="margin-top: 10px;">
-        <span class="metric-pill">🚀 <b>{len(PROJECTS)}</b> Repositorios</span>
+        <span class="metric-pill">🚀 <b>{len(PROJECTS)}</b> Apps</span>
         <span class="metric-pill">🧩 <b>{len(lang_list)}</b> Lenguajes / áreas</span>
-        <span class="metric-pill">☁️ Datos en vivo desde GitHub</span>
+        <span class="metric-pill">☁️ Repositorios sincronizados con GitHub</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -479,12 +503,12 @@ else:
 # ---------------------------------------------------------
 # Footer
 # ---------------------------------------------------------
-st.markdown("""
+st.markdown(f"""
 <div class="portfolio-footer">
-    <p><b>Portafolio de Soluciones de Inteligencia Artificial</b> • Desarrollado con Streamlit & Python</p>
+    <p><b>{PROFILE["name"]}</b> • Desarrollado con Streamlit & Python</p>
     <p style="font-size: 0.8rem; margin-top: 4px;">
-        Descubre más proyectos, tutoriales y documentación en el 
-        <a href="https://www.duvanvilladiego.dev/" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 600;">Portafolio</a>
+        Más sobre mi trabajo en
+        <a href="{PROFILE["web"]}" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 600;">duvanvilladiego.dev</a>
     </p>
 </div>
 """, unsafe_allow_html=True)
