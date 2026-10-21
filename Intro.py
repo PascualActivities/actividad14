@@ -310,12 +310,12 @@ with st.sidebar:
 
     st.markdown("""
         <div style="text-align: center; margin-top: -10px; margin-bottom: 15px;">
-            <h2 style="margin: 0; font-size: 1.35rem; font-weight: 800;">Carlos M. Correa</h2>
+            <h2 style="margin: 0; font-size: 1.35rem; font-weight: 800;">Duvan Villadiego</h2>
             <p style="color: #6366f1; font-weight: 600; font-size: 0.85rem; margin-top: 4px; margin-bottom: 10px;">
-                Desarrollador & Especialista en IA
+                Desarrollador & Arquitecto de software
             </p>
             <p style="font-size: 0.82rem; color: #64748b; line-height: 1.45; text-align: justify;">
-                Desarrollo de soluciones avanzadas en Inteligencia Artificial aplicada: visión por computador, modelos de lenguaje (LLMs), síntesis y reconocimiento de voz, y agentes autónomos.
+                Desarrollo de soluciones de software simplificadas
             </p>
         </div>
     """, unsafe_allow_html=True)
@@ -326,28 +326,24 @@ with st.sidebar:
     st.markdown(
         "Accede al portal oficial con guías didácticas, ejercicios prácticos y material formativo paso a paso:"
     )
-    url_ia = "https://sites.google.com/view/aplicacionesdeia/inicio"
-    st.link_button("🌐 Abrir Portal de Ejercicios", url_ia, use_container_width=True)
+    url_ia = "https://www.duvanvilladiego.dev/"
+    st.link_button("🌐 Abrir Portafolio", url_ia, use_container_width=True)
 
     st.markdown("---")
     st.subheader("🛠️ Stack Tecnológico")
     st.markdown("""
     <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+        <span class="tech-pill">Java</span>
+        <span class="tech-pill">Springboot</span>
+        <span class="tech-pill">.NET</span>
         <span class="tech-pill">Python</span>
-        <span class="tech-pill">Streamlit</span>
-        <span class="tech-pill">PyTorch</span>
-        <span class="tech-pill">YOLOv5</span>
-        <span class="tech-pill">OpenAI Whisper</span>
-        <span class="tech-pill">GPT-4o Vision</span>
-        <span class="tech-pill">LangChain</span>
-        <span class="tech-pill">RAG / Vector DB</span>
-        <span class="tech-pill">Pandas</span>
-        <span class="tech-pill">AI Agents</span>
+        <span class="tech-pill">Kafka</span>
+        <span class="tech-pill">Patterns designs</span>
     </div>
     """, unsafe_allow_html=True)
 
     st.markdown("---")
-    st.caption("© 2026 Carlos M. Correa • cmcorrea_apps")
+    st.caption("© 2026 Duvan Villadiego")
 
 # ---------------------------------------------------------
 # Main Header / Hero Section
@@ -488,7 +484,7 @@ st.markdown("""
     <p><b>Portafolio de Soluciones de Inteligencia Artificial</b> • Desarrollado con Streamlit & Python</p>
     <p style="font-size: 0.8rem; margin-top: 4px;">
         Descubre más proyectos, tutoriales y documentación en el 
-        <a href="https://sites.google.com/view/aplicacionesdeia/inicio" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 600;">Portal de Aplicaciones de IA</a>
+        <a href="https://www.duvanvilladiego.dev/" target="_blank" style="color: #6366f1; text-decoration: none; font-weight: 600;">Portafolio</a>
     </p>
 </div>
 """, unsafe_allow_html=True)
